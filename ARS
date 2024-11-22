@@ -183,3 +183,4 @@ public class AirlineReservationSystem {
         priceValueLabel.setText("$" + String.format("%.2f", basePrice));
     }
 }
+
