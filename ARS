@@ -1,0 +1,185 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+public class AirlineReservationSystem {
+
+    private static ArrayList<String> bookedSeats = new ArrayList<>(); // Store booked seat numbers
+    private static ArrayList<String> bookingHistory = new ArrayList<>(); // Store booking history
+    private static HashMap<String, Integer> seatCapacity = new HashMap<>(); // Store seat capacities for flights
+
+    public static void main(String[] args) {
+        // Define seat capacities for each flight
+        seatCapacity.put("Flight 101 - New York to London (8:00 AM - 12:00 PM)", 100);
+        seatCapacity.put("Flight 202 - Tokyo to Sydney (2:00 PM - 10:00 PM)", 120);
+        seatCapacity.put("Flight 303 - Mumbai to Dubai (6:00 AM - 9:00 AM)", 80);
+
+        // Create Frame
+        JFrame frame = new JFrame("Airline Reservation System");
+        frame.setSize(900, 700);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLayout(new BorderLayout(10, 10));
+
+        // Add Flight Logo
+        JLabel logoLabel = new JLabel();
+        logoLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        ImageIcon flightLogo = new ImageIcon("flight_logo.png"); // Replace with your logo path
+        logoLabel.setIcon(new ImageIcon(flightLogo.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH)));
+        frame.add(logoLabel, BorderLayout.NORTH);
+
+        // Panel for Form
+        JPanel formPanel = new JPanel(new GridLayout(12, 2, 10, 10));
+        formPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        // Labels and Input Fields
+        JLabel nameLabel = createColoredLabel("Passenger Name:", Color.BLUE);
+        JTextField nameField = new JTextField();
+
+        JLabel flightLabel = createColoredLabel("Select Flight:", Color.GREEN);
+        String[] flights = {
+            "Flight 101 - New York to London (8:00 AM - 12:00 PM)",
+            "Flight 202 - Tokyo to Sydney (2:00 PM - 10:00 PM)",
+            "Flight 303 - Mumbai to Dubai (6:00 AM - 9:00 AM)"
+        };
+        JComboBox<String> flightDropdown = new JComboBox<>(flights);
+
+        JLabel travelClassLabel = createColoredLabel("Travel Class:", Color.MAGENTA);
+        String[] travelClasses = {"Economy", "Business", "First Class"};
+        JComboBox<String> travelClassDropdown = new JComboBox<>(travelClasses);
+
+        JLabel seatLabel = createColoredLabel("Seat Number:", Color.ORANGE);
+        JTextField seatField = new JTextField();
+
+        JButton addSeatButton = new JButton("Add Seat");
+        JLabel bookedSeatsLabel = createColoredLabel("Currently Booked Seats:", Color.RED);
+        JLabel bookedSeatsValueLabel = new JLabel("None");
+
+        JLabel totalSeatsLabel = createColoredLabel("Total Seats Booked:", Color.CYAN);
+        JLabel totalSeatsValueLabel = new JLabel("0");
+
+        JLabel priceLabel = createColoredLabel("Total Price (Auto Calculated):", Color.DARK_GRAY);
+        JLabel priceValueLabel = new JLabel("$0.00");
+
+        JLabel availabilityLabel = createColoredLabel("Flight Availability:", Color.PINK);
+        JLabel availabilityValueLabel = new JLabel("Seats Available");
+
+        JButton checkAvailabilityButton = new JButton("Check Availability");
+
+        JLabel resultLabel = new JLabel();
+        JButton bookButton = new JButton("Book Flight");
+        JButton cancelButton = new JButton("Cancel Ticket");
+        JButton viewSeatsButton = new JButton("View Booked Seats");
+        JButton viewHistoryButton = new JButton("View Booking History");
+        JButton helpButton = new JButton("Help Center");
+        JButton resetButton = new JButton("Reset Form");
+
+        // Update Price Dynamically
+        flightDropdown.addActionListener(e -> updatePrice(flightDropdown, travelClassDropdown, priceValueLabel));
+        travelClassDropdown.addActionListener(e -> updatePrice(flightDropdown, travelClassDropdown, priceValueLabel));
+
+        // Add Seat Action
+        addSeatButton.addActionListener(e -> {
+            String seat = seatField.getText().trim();
+            if (!seat.isEmpty() && !bookedSeats.contains(seat)) {
+                bookedSeats.add(seat);
+                bookedSeatsValueLabel.setText(String.join(", ", bookedSeats));
+                totalSeatsValueLabel.setText(String.valueOf(bookedSeats.size()));
+                seatField.setText("");
+            } else if (bookedSeats.contains(seat)) {
+                JOptionPane.showMessageDialog(frame, "Seat " + seat + " is already added!");
+            } else {
+                JOptionPane.showMessageDialog(frame, "Please enter a valid seat number.");
+            }
+        });
+
+        // Check Flight Availability Action
+        checkAvailabilityButton.addActionListener(e -> {
+            String selectedFlight = (String) flightDropdown.getSelectedItem();
+            int totalSeats = seatCapacity.get(selectedFlight);
+            int bookedSeatsCount = bookedSeats.size();
+            int availableSeats = totalSeats - bookedSeatsCount;
+
+            availabilityValueLabel.setText(availableSeats + " Seats Available for " + selectedFlight);
+        });
+
+        // Book Flight Action
+        bookButton.addActionListener(e -> {
+            String name = nameField.getText();
+            String flight = (String) flightDropdown.getSelectedItem();
+            String travelClass = (String) travelClassDropdown.getSelectedItem();
+            String price = priceValueLabel.getText();
+
+            if (!name.isEmpty() && !bookedSeats.isEmpty()) {
+                String bookingDetails = "Passenger: " + name + ", Flight: " + flight + ", Travel Class: " + travelClass
+                        + ", Seats: " + String.join(", ", bookedSeats) + ", Price: " + price;
+                bookingHistory.add(bookingDetails);
+                resultLabel.setText("<html>Booking Successful!<br>" + bookingDetails.replace(", ", "<br>") + "</html>");
+            } else {
+                resultLabel.setText("Please fill all required fields and add at least one seat!");
+            }
+        });
+
+        // Add Components to Form Panel
+        formPanel.add(nameLabel);
+        formPanel.add(nameField);
+        formPanel.add(flightLabel);
+        formPanel.add(flightDropdown);
+        formPanel.add(travelClassLabel);
+        formPanel.add(travelClassDropdown);
+        formPanel.add(seatLabel);
+        formPanel.add(seatField);
+        formPanel.add(new JLabel("")); // Empty cell
+        formPanel.add(addSeatButton);
+        formPanel.add(bookedSeatsLabel);
+        formPanel.add(bookedSeatsValueLabel);
+        formPanel.add(totalSeatsLabel);
+        formPanel.add(totalSeatsValueLabel);
+        formPanel.add(priceLabel);
+        formPanel.add(priceValueLabel);
+        formPanel.add(availabilityLabel);
+        formPanel.add(availabilityValueLabel);
+        formPanel.add(checkAvailabilityButton);
+        formPanel.add(bookButton);
+        formPanel.add(cancelButton);
+        formPanel.add(viewSeatsButton);
+        formPanel.add(viewHistoryButton);
+        formPanel.add(helpButton);
+        formPanel.add(resetButton);
+
+        // Add Components to Frame
+        frame.add(formPanel, BorderLayout.CENTER);
+        frame.add(resultLabel, BorderLayout.SOUTH);
+
+        // Set Frame Visible
+        frame.setVisible(true);
+    }
+
+    // Method to Create Colored Label
+    private static JLabel createColoredLabel(String text, Color color) {
+        JLabel label = new JLabel(text);
+        label.setForeground(color);
+        return label;
+    }
+
+    // Method to Update Ticket Price
+    private static void updatePrice(JComboBox<String> flightDropdown, JComboBox<String> travelClassDropdown, JLabel priceValueLabel) {
+        int flightIndex = flightDropdown.getSelectedIndex();
+        int travelClassIndex = travelClassDropdown.getSelectedIndex();
+
+        double basePrice = 0.0;
+        switch (flightIndex) {
+            case 0: basePrice = 800.00; break; // New York to London
+            case 1: basePrice = 1200.00; break; // Tokyo to Sydney
+            case 2: basePrice = 600.00; break; // Mumbai to Dubai
+        }
+
+        // Adjust price based on travel class
+        if (travelClassIndex == 1) basePrice *= 1.5; // Business Class
+        if (travelClassIndex == 2) basePrice *= 2.0; // First Class
+
+        priceValueLabel.setText("$" + String.format("%.2f", basePrice));
+    }
+}
